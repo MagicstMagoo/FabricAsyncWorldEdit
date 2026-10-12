@@ -36,3 +36,5 @@ worldedit-core/src/main/resources/lang/*
 .DS_Store
 ### Run server ignore
 run-*
+# Throwaway Fabric server used for runtime verification
+test-server/

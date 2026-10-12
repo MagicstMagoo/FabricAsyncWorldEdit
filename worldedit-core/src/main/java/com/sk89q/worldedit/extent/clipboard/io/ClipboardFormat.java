@@ -36,6 +36,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -80,11 +81,25 @@ public interface ClipboardFormat {
     /**
      * Return whether the given file is of this format.
      *
+     * <p>Deprecated in upstream WorldEdit 7.4 in favour of {@link #isFormat(Path)}; it is kept
+     * (without the annotation, so third-party builds are not forced to care) and delegates to
+     * the path overload so formats that only override that one still get asked.</p>
+     *
      * @param file the file
      * @return true if the given file is of this format
      */
     default boolean isFormat(File file) {
-        try (InputStream stream = Files.newInputStream(file.toPath())) {
+        return isFormat(file.toPath());
+    }
+
+    /**
+     * Return whether the given path is of this format.
+     *
+     * @param path the path
+     * @return true if the given path is of this format
+     */
+    default boolean isFormat(Path path) {
+        try (InputStream stream = Files.newInputStream(path)) {
             return isFormat(stream);
         } catch (IOException e) {
             return false;
@@ -127,9 +142,15 @@ public interface ClipboardFormat {
     /**
      * Get the explicit file extensions (e.g. .schem2) this format is commonly known to use.
      *
+     * <p>Upstream WorldEdit 7.4 removed this concept, so it is a {@code default} here: FAWE's own
+     * formats override it, while formats compiled against 7.4 (which cannot know about it) stay
+     * instantiable instead of failing with {@link AbstractMethodError}.</p>
+     *
      * @return The explicit file extensions this format might be known by
      */
-    Set<String> getExplicitFileExtensions();
+    default Set<String> getExplicitFileExtensions() {
+        return Set.of();
+    }
 
     /**
      * Sets the actor's clipboard.

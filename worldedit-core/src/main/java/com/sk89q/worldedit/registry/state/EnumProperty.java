@@ -20,6 +20,7 @@
 package com.sk89q.worldedit.registry.state;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +37,21 @@ public class EnumProperty extends AbstractProperty<String> {
 
     //FAWE start
     private EnumProperty(final String name, final List<String> values, int bitOffset) {
-        super(name, values, bitOffset);
-        for (int i = 0; i < values.size(); i++) {
-            String value = values.get(i).intern();
-            values.set(i, value);
-            offsets.put(value, i);
+        // Upstream WorldEdit 7.4 hands immutable lists (ImmutableList) to this constructor, so the
+        // values must not be mutated in place any more - intern into a fresh list instead.
+        super(name, internValues(values), bitOffset);
+        final List<String> interned = getValues();
+        for (int i = 0; i < interned.size(); i++) {
+            offsets.put(interned.get(i), i);
         }
+    }
+
+    private static List<String> internValues(final List<String> values) {
+        final List<String> interned = new ArrayList<>(values.size());
+        for (String value : values) {
+            interned.add(value.intern());
+        }
+        return interned;
     }
 
     @Override

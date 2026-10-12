@@ -108,8 +108,10 @@ public class BlockType implements Keyed, Pattern {
         }
         this.id = id;
         //FAWE start
-        //TODO fix the line below
-        this.settings = new BlockTypesCache.Settings(this, id, 0, null);
+        // Upstream WorldEdit 7.4 registers platform-provided block types through this constructor
+        // (the function only derives the default state). Settings fills the passed list with the
+        // generated states, so it must be a mutable, non-null list.
+        this.settings = new BlockTypesCache.Settings(this, id, 0, new java.util.ArrayList<>());
     }
 
     @Deprecated

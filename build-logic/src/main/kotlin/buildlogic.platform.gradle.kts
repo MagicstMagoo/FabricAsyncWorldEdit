@@ -23,6 +23,10 @@ tasks.named<ShadowJar>("shadowJar") {
         include(project(":worldedit-libs:core"))
         include(project(":worldedit-libs:${project.name.replace("worldedit-", "")}"))
         include(project(":worldedit-core"))
+        // The Fabric platform also ships the shared Minecraft-specific core module.
+        if (project.name == "worldedit-fabric") {
+            include(project(":worldedit-core-mc"))
+        }
         include(dependency(jchronic))
         exclude(dependency("com.google.code.findbugs:jsr305"))
     }

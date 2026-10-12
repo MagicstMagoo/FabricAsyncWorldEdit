@@ -1,5 +1,6 @@
 import buildlogic.stringyLibs
 import buildlogic.getLibrary
+import buildlogic.MockitoAgentArgumentProvider
 
 plugins {
     id("buildlogic.common")
@@ -22,7 +23,7 @@ tasks
         val disabledLint = listOf(
             "processing", "path", "fallthrough", "serial", "overloads", "this-escape",
         )
-        options.release.set(21)
+        options.release.set(25)
         options.compilerArgs.addAll(listOf("-Xlint:all") + disabledLint.map { "-Xlint:-$it" })
         options.isDeprecation = true
         options.encoding = "UTF-8"
@@ -30,7 +31,19 @@ tasks
         options.compilerArgs.add("--add-modules=jdk.incubator.vector")
     }
 
+val mockitoAgent = configurations.create("mockitoAgent") {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+
+dependencies {
+    add(mockitoAgent.name, "org.mockito:mockito-core:${stringyLibs.findVersion("mockito").get().requiredVersion}")
+}
+
 tasks.withType<Test>().configureEach {
+    jvmArgumentProviders.add(objects.newInstance<MockitoAgentArgumentProvider>().apply {
+        agentClasspath.from(mockitoAgent)
+    })
     useJUnitPlatform {
         includeEngines("junit-jupiter", "jqwik")
     }

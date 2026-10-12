@@ -1,4 +1,9 @@
 # FastAsyncWorldEdit
+
+This branch targets **Fabric / Minecraft 26.3** with **Java 25**, using the WorldEdit
+7.4.6 platform layer and FAWE 2.15.1 core. See [the Fabric build and runtime guide](docs/FABRIC-26.3.md)
+for installation, development runs, smoke tests, and current placement limitations.
+
 [![Join us on Discord](https://img.shields.io/discord/268444645527126017.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/intellectualsites)
 [![bStats Servers](https://img.shields.io/bstats/servers/1403)](https://bstats.org/plugin/bukkit/FastAsyncWorldEdit/1403)
 [![Crowdin](https://badges.crowdin.net/e/4a5819fae3fd88234a8ea13bfbb072bb/localized.svg)](https://intellectualsites.crowdin.com/fastasyncworldedit)

@@ -21,6 +21,9 @@ dependencies {
     implementation(libs.rhino)
     implementation(libs.snakeyaml)
     implementation(libs.guava)
+    // Guava 33.6 dropped its checker-qual dependency (it moved to jspecify), but FAWE's
+    // NBT/schematic readers still use the checkerframework nullness annotations.
+    compileOnlyApi(libs.checkerqual)
     compileOnlyApi(libs.jsr305)
     implementation(libs.gson)
 

@@ -48,6 +48,23 @@ public interface Property<T> {
      */
     List<T> getValues();
 
+    //FAWE start
+    /**
+     * Upstream WorldEdit 7.4 renamed {@link #getName()} to {@code name()}. This default keeps
+     * code written against the newer API compiling against this interface.
+     */
+    default String name() {
+        return getName();
+    }
+
+    /**
+     * Upstream WorldEdit 7.4 renamed {@link #getValues()} to {@code values()}.
+     */
+    default List<T> values() {
+        return getValues();
+    }
+    //FAWE end
+
     /**
      * Gets the value for the given string, or null.
      *

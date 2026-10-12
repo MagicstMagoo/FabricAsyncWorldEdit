@@ -3,6 +3,12 @@ plugins {
 }
 
 repositories {
+    // PaperMC is the origin of paperweight-userdev; the EngineHub mirror of that SNAPSHOT
+    // repository frequently stalls on this artifact, so prefer the source of truth.
+    maven {
+        name = "PaperMC"
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
     gradlePluginPortal()
     maven {
         name = "EngineHub Repository"

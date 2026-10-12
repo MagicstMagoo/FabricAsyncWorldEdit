@@ -3,6 +3,11 @@
 
 = Compiling
 
+For the Fabric / Minecraft 26.3 branch, use *JDK 25* and build the Fabric module with
+`gradlew :worldedit-fabric:build`. See link:docs/FABRIC-26.3.md[the Fabric guide] for
+development runs, packaging, and runtime regression tests. The general instructions
+below describe the other platforms.
+
 You can compile FastAsyncWorldEdit as long as you have some version of Java greater than or equal to 21 installed. Gradle will download JDK 21 specifically if needed,
 but it needs some version of Java to bootstrap from.
 

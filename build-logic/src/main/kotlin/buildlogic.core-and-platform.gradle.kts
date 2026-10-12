@@ -4,6 +4,13 @@ plugins {
     id("signing")
 }
 
+// Project-level repositories make Gradle ignore the settings-level ones, so the repositories
+// every platform/core module needs have to be added here.
+repositories {
+    addEngineHubRepository()
+    mavenCentral()
+}
+
 ext["internalVersion"] = "$version+${rootProject.ext["gitCommitHash"]}"
 
 val enablePublishing = gradle.startParameter.taskNames.any { taskName ->

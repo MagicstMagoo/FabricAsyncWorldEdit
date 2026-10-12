@@ -1,0 +1,26 @@
+name: Fabric 26.3
+
+on:
+  push:
+    branches: [fabric-26.3, fabric-26.3-port]
+  pull_request:
+    branches: [fabric-26.3, fabric-26.3-port]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: gradle/actions/wrapper-validation@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Build and test Fabric and FAWE core
+        run: ./gradlew :worldedit-fabric:build :worldedit-core:test :worldedit-core-mc:test
+      - uses: actions/upload-artifact@v6
+        with:
+          name: FastAsyncWorldEdit-Fabric-26.3
+          path: worldedit-fabric/build/libs/*-dist.jar

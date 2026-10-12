@@ -29,6 +29,7 @@ import com.fastasyncworldedit.core.extent.ProcessedWEExtent;
 import com.fastasyncworldedit.core.extent.ResettableExtent;
 import com.fastasyncworldedit.core.extent.SingleRegionExtent;
 import com.fastasyncworldedit.core.extent.SourceMaskExtent;
+import com.fastasyncworldedit.core.extent.clipboard.DiskOptimizedClipboard;
 import com.fastasyncworldedit.core.extent.clipboard.WorldCopyClipboard;
 import com.fastasyncworldedit.core.extent.processor.ExtentBatchProcessorHolder;
 import com.fastasyncworldedit.core.extent.processor.lighting.NullRelighter;
@@ -70,6 +71,7 @@ import com.sk89q.worldedit.extent.ChangeSetExtent;
 import com.sk89q.worldedit.extent.Extent;
 import com.sk89q.worldedit.extent.MaskingExtent;
 import com.sk89q.worldedit.extent.TracingExtent;
+import com.sk89q.worldedit.extent.clipboard.BlockArrayClipboard;
 import com.sk89q.worldedit.extent.clipboard.Clipboard;
 import com.sk89q.worldedit.extent.inventory.BlockBag;
 import com.sk89q.worldedit.extent.inventory.BlockBagExtent;
@@ -155,6 +157,7 @@ import org.apache.logging.log4j.Logger;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -490,7 +493,7 @@ public class EditSession extends PassthroughExtent implements AutoCloseable {
     @Deprecated
     public boolean isQueueEnabled() {
         //FAWE start - see reorder comment, we don't need this
-        return true;
+        return !wnaMode;
         //FAWE end
     }
 
@@ -502,6 +505,10 @@ public class EditSession extends PassthroughExtent implements AutoCloseable {
      */
     @Deprecated
     public void enableQueue() {
+        if (wnaMode) {
+            // Native worlds have no chunk queue. The delegate fallback inserts a non-flushing placeholder buffer.
+            return;
+        }
         //FAWE start - see reorder comment, we don't need this
         super.enableQueue();
         //FAWE end
@@ -514,6 +521,10 @@ public class EditSession extends PassthroughExtent implements AutoCloseable {
      */
     @Deprecated
     public void disableQueue() {
+        if (wnaMode) {
+            // There is no queue to unwrap; removing a delegate here would discard history or restrictions.
+            return;
+        }
         //FAWE start - see reorder comment, we don't need this
         super.disableQueue();
         //FAWE end
@@ -1988,39 +1999,80 @@ public class EditSession extends PassthroughExtent implements AutoCloseable {
 
         BlockVector3 disAbs = displace.abs();
 
-        if (disAbs.x() < size.x() && disAbs.y() < size.y() && disAbs.z() < size.z()) {
+        boolean overlapping = disAbs.x() < size.x() && disAbs.y() < size.y() && disAbs.z() < size.z();
+        if (overlapping) {
             // Buffer if overlapping
             enableQueue();
         }
 
-        ForwardExtentCopy copy = new ForwardExtentCopy(this, region, this, to);
+        BlockArrayClipboard nativeSnapshot = null;
+        try {
+            Extent source = this;
+            if (wnaMode && overlapping) {
+                // Native writes are immediate, so preserve every source block before an overlapping move.
+                nativeSnapshot = new BlockArrayClipboard(region);
+                ForwardExtentCopy snapshotCopy = new ForwardExtentCopy(this, region, nativeSnapshot, region.getMinimumPoint());
+                snapshotCopy.setCopyingEntities(false);
+                snapshotCopy.setCopyingBiomes(copyBiomes);
+                Operations.completeBlindly(snapshotCopy);
+                nativeSnapshot.flush();
+                source = new AbstractDelegateExtent(nativeSnapshot) {
+                    @Override
+                    public List<? extends Entity> getEntities(Region area) {
+                        return EditSession.this.getEntities(area);
+                    }
 
-        if (replacement == null) {
-            replacement = BlockTypes.AIR.getDefaultState();
-        }
-        BlockReplace remove = replacement instanceof ExistingPattern ? null : new BlockReplace(this, replacement);
-        copy.setSourceFunction(remove); // Remove
+                    @Override
+                    public List<? extends Entity> getEntities() {
+                        return EditSession.this.getEntities();
+                    }
+                };
+            }
 
-        copy.setCopyingEntities(moveEntities);
-        copy.setRemovingEntities(moveEntities);
-        copy.setCopyingBiomes(copyBiomes);
-        copy.setRepetitions(1);
-        final Region allowedRegion;
-        if (allowedRegions == null || allowedRegions.length == 0) {
-            allowedRegion = new NullRegion();
-        } else {
-            allowedRegion = new RegionIntersection(allowedRegions);
-        }
-        Mask sourceMask = this.getSourceMask();
-        mask = MaskIntersection.of(sourceMask, mask, new RegionMask(allowedRegion)).optimize();
-        if (mask != Masks.alwaysTrue()) {
-            copy.setSourceMask(mask);
-            if (sourceMask != null && sourceMask.equals(mask)) {
-                setSourceMask(null);
+            ForwardExtentCopy copy = new ForwardExtentCopy(source, region, this, to);
+
+            if (replacement == null) {
+                replacement = BlockTypes.AIR.getDefaultState();
+            }
+            BlockReplace remove = replacement instanceof ExistingPattern ? null : new BlockReplace(this, replacement);
+            copy.setSourceFunction(remove); // Remove
+
+            copy.setCopyingEntities(moveEntities);
+            copy.setRemovingEntities(moveEntities);
+            copy.setCopyingBiomes(copyBiomes);
+            copy.setRepetitions(1);
+            final Region allowedRegion;
+            if (allowedRegions == null || allowedRegions.length == 0) {
+                allowedRegion = new NullRegion();
+            } else {
+                allowedRegion = new RegionIntersection(allowedRegions);
+            }
+            Mask sourceMask = this.getSourceMask();
+            mask = MaskIntersection.of(sourceMask, mask, new RegionMask(allowedRegion)).optimize();
+            if (mask != Masks.alwaysTrue()) {
+                if (sourceMask != null && sourceMask.equals(mask)) {
+                    setSourceMask(null);
+                }
+                if (nativeSnapshot != null) {
+                    mask = mask.copy();
+                    new MaskTraverser(mask).reset(source);
+                }
+                copy.setSourceMask(mask);
+            }
+            Operations.completeBlindly(copy);
+            return this.changes = copy.getAffected();
+        } finally {
+            if (nativeSnapshot != null) {
+                nativeSnapshot.close();
+                if (nativeSnapshot.getParent() instanceof DiskOptimizedClipboard diskSnapshot) {
+                    try {
+                        Files.deleteIfExists(diskSnapshot.getFile().toPath());
+                    } catch (IOException e) {
+                        LOGGER.warn("Could not delete temporary clipboard for an overlapping native move", e);
+                    }
+                }
             }
         }
-        Operations.completeBlindly(copy);
-        return this.changes = copy.getAffected();
         //FAWE end
     }
 

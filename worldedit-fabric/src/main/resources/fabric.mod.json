@@ -3,44 +3,64 @@
     "id": "worldedit",
     "version": "${version}",
 
-    "name": "WorldEdit",
-    "description": "WorldEdit is an easy-to-use in-game world editor for Minecraft, supporting both single- and multi-player.",
+    "name": "WorldEdit (FastAsyncWorldEdit)",
+    "description": "FastAsyncWorldEdit for Fabric with the WorldEdit 7.4.6 Minecraft platform layer and asynchronous edit computation. FAWE build ${faweVersion}.",
     "authors": [
-        "sk89q",
-        "wizjany",
-        "TomyLobo",
-        "kenzierocks",
-        "Me4502"
+        {
+            "name": "EngineHub",
+            "contact": {
+                "homepage": "https://enginehub.org/",
+                "discord": "https://discord.gg/enginehub"
+            }
+        }
     ],
     "contact": {
         "homepage": "https://enginehub.org/worldedit/",
-        "sources": "https://github.com/EngineHub/WorldEdit"
+        "sources": "https://github.com/Plaaasma/FabricAsyncWorldEdit",
+        "issues": "https://github.com/Plaaasma/FabricAsyncWorldEdit/issues",
+        "discord": "https://discord.gg/enginehub"
+    },
+    "custom": {
+        "fawe:version": "${faweVersion}",
+        "modmenu": {
+            "links": {
+                "modmenu.discord": "https://discord.gg/enginehub",
+                "modmenu.crowdin": "https://crowdin.com/project/worldedit-core",
+                "modmenu.wiki": "https://worldedit.enginehub.org/en/latest/",
+                "modmenu.modrinth": "https://modrinth.com/plugin/worldedit",
+                "modmenu.curseforge": "https://www.curseforge.com/minecraft/mc-mods/worldedit",
+                "modmenu.github_sponsors": "https://github.com/sponsors/EngineHub",
+                "modmenu.opencollective": "https://opencollective.com/enginehub"
+            }
+        }
     },
 
-    "license": "GPL3",
+    "license": "GPL-3.0-only",
     "icon": "assets/worldedit/icon.png",
 
     "environment": "*",
     "entrypoints": {
         "main": [
-            "com.sk89q.worldedit.fabric.FabricWorldEdit"
+            "com.sk89q.worldedit.fabric.internal.FabricWorldEdit"
         ]
     },
 
     "depends": {
+        "minecraft": "~26.3",
+        "java": ">=25",
         "worldeditcui_protocol": "*",
-        "fabricloader": ">=0.4.0",
+        "fabricloader": ">=0.19.5",
         "fabric-api-base": "*",
         "fabric-command-api-v2": "*",
         "fabric-lifecycle-events-v1": "*",
         "fabric-events-interaction-v0": "*",
-        "fabric-networking-api-v1": "*"
+        "fabric-networking-api-v1": "*",
+        "fabric-permission-api-v1": "*"
     },
     "suggests": {
         "fabric-permissions-api-v0": "*"
     },
     "mixins": [
-        "worldedit.mixins.json"
-    ],
-    "accessWidener" : "worldedit.accesswidener"
+        "worldedit-coremc.mixins.json"
+    ]
 }

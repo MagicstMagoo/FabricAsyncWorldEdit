@@ -49,8 +49,9 @@ public class SpTestHarness implements ClientModInitializer {
             mc.options.pauseOnLostFocus = false;
             System.out.println("[SPHARNESS] disabled pauseOnLostFocus");
         }
-        if (mc.screen instanceof net.minecraft.client.gui.screens.PauseScreen) {
-            mc.setScreen(null);
+        // Minecraft 26.3 moved the current screen onto Gui (mc.gui.screen()/setScreen()).
+        if (mc.gui.screen() instanceof net.minecraft.client.gui.screens.PauseScreen) {
+            mc.gui.setScreen(null);
         }
         if (mc.player == null || mc.level == null || mc.getConnection() == null) {
             ticksInWorld = 0;

@@ -314,6 +314,20 @@ public interface World extends Extent, Keyed, IChunkCache<IChunkGet> {
             MaxChangedBlocksException;
 
     /**
+     * Generate a tree at the given position.
+     *
+     * @param type        the tree type
+     * @param editSession the {@link EditSession}
+     * @param position    the position
+     * @return true if generation was successful
+     * @throws MaxChangedBlocksException thrown if too many blocks were changed
+     */
+    default boolean generateTree(com.sk89q.worldedit.world.generation.TreeType type, EditSession editSession, BlockVector3 position)
+            throws MaxChangedBlocksException {
+        throw new UnsupportedOperationException("This world does not support WorldEdit tree types: " + type);
+    }
+
+    /**
      * Generate a structure at the given position
      *
      * @param type        The structure type
@@ -462,6 +476,18 @@ public interface World extends Extent, Keyed, IChunkCache<IChunkGet> {
 
     @Override
     IChunkGet get(int x, int z);
+
+    /**
+     * Whether this world implements FAWE's native chunk read and placement queue.
+     *
+     * <p>Platforms without a chunk adapter must return {@code false}. Fast mode and
+     * unlimited limits can still be used, but edits will use individual block access.</p>
+     *
+     * @return whether FAWE can place chunks in this world
+     */
+    default boolean supportsChunkPlacement() {
+        return true;
+    }
 
     /**
      * Send a fake chunk to a player.

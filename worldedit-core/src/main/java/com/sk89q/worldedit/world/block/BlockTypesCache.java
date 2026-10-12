@@ -137,6 +137,12 @@ public class BlockTypesCache {
 
         private int parseProperties(String properties, Map<String, AbstractProperty<?>> propertyMap) {
             int id = internalId;
+            if (properties == null || properties.isEmpty()) {
+                // Platform-registered block types (upstream WorldEdit 7.4) carry no default-state
+                // string. Leaving every property bit unset is exactly the vanilla default state,
+                // because the first value of each property is the default one.
+                return id;
+            }
             for (String keyPair : properties.split(",")) {
                 String[] split = keyPair.split("=");
                 String name = split[0];

@@ -12,10 +12,14 @@ pluginManagement {
             url = uri("https://maven.enginehub.org/repo/")
         }
     }
+    plugins {
+        // Minecraft 26.1+ is unobfuscated: Loom splits its plugin ids. The legacy
+        // "fabric-loom" id only supports obfuscated (<= 1.21.11) versions.
+        id("net.fabricmc.fabric-loom") version "1.18.2"
+    }
 }
 plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
-    id("fabric-loom") version "1.14.7"
 }
 dependencyResolutionManagement {
     repositories {
@@ -65,6 +69,12 @@ listOf("1_20_2", "1_20_4", "1_20_5", "1_21", "1_21_4", "1_21_5", "1_21_6", "1_21
 }
 
 listOf("bukkit", "core", "fabric", "cli").forEach {
+    include("worldedit-libs:$it")
+    include("worldedit-$it")
+}
+
+// Minecraft-specific shared core (upstream WorldEdit 7.4.x structure).
+listOf("core-mc").forEach {
     include("worldedit-libs:$it")
     include("worldedit-$it")
 }

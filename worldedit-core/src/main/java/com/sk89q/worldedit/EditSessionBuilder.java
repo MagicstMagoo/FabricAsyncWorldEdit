@@ -494,7 +494,8 @@ public final class EditSessionBuilder {
         if (extent == null) {
             IQueueExtent<IQueueChunk> queue = null;
             World unwrapped = WorldWrapper.unwrap(world);
-            boolean placeChunks = (this.fastMode || this.limit.FAST_PLACEMENT) && (wnaMode == null || !wnaMode);
+            boolean placeChunks = (unwrapped == null || unwrapped.supportsChunkPlacement())
+                    && (this.fastMode || this.limit.FAST_PLACEMENT) && (wnaMode == null || !wnaMode);
 
             if (placeChunks) {
                 wnaMode = false;
@@ -517,7 +518,10 @@ public final class EditSessionBuilder {
                 wnaMode = true;
                 extent = world;
             }
-            if (combineStages == null) {
+            if (!placeChunks) {
+                // Combined history is a chunk processor; native block access records changes individually.
+                combineStages = false;
+            } else if (combineStages == null) {
                 combineStages =
                         // If it's enabled in the settings
                         Settings.settings().HISTORY.COMBINE_STAGES

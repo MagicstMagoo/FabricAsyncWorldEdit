@@ -213,6 +213,16 @@ public class WorldWrapper extends AbstractWorld {
     }
 
     @Override
+    public String id() {
+        return parent.id();
+    }
+
+    @Override
+    public boolean supportsChunkPlacement() {
+        return parent.supportsChunkPlacement();
+    }
+
+    @Override
     public <B extends BlockStateHolder<B>> boolean setBlock(BlockVector3 position, B block, boolean notifyAndLight) throws
             WorldEditException {
         return parent.setBlock(position, block, notifyAndLight);

@@ -253,6 +253,40 @@ public class ClipboardFormats {
     //FAWE end
 
     /**
+     * Detect the format of a given path. Upstream WorldEdit 7.4 API, which replaced the
+     * {@code File} overload; FAWE's optimized built-in detection is reused here.
+     *
+     * @param path the path
+     * @return the format, otherwise null if one cannot be detected
+     */
+    @Nullable
+    public static ClipboardFormat findByPath(java.nio.file.Path path) {
+        checkNotNull(path);
+        return findByFile(path.toFile());
+    }
+
+    /**
+     * Detect the format of a given input stream. Upstream WorldEdit 7.4 API.
+     *
+     * @param inputStreamSupplier the input stream supplier
+     * @return the format, otherwise null if one cannot be detected
+     */
+    @Nullable
+    public static ClipboardFormat findByInputStream(java.util.function.Supplier<InputStream> inputStreamSupplier) {
+        checkNotNull(inputStreamSupplier);
+        for (ClipboardFormat format : registeredFormats) {
+            try (InputStream stream = inputStreamSupplier.get()) {
+                if (format.isFormat(stream)) {
+                    return format;
+                }
+            } catch (IOException ignored) {
+                // It's not the right format if we can't read it
+            }
+        }
+        return null;
+    }
+
+    /**
      * A mapping from extensions to formats.
      *
      * @return a multimap from a file extension to the potential matching formats.
